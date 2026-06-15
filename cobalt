@@ -1,17 +1,16 @@
 --[[
-    Cobalt UI - Fully Fixed
+    Cobalt UI - FIXED (No GetMouse, robust slider dragging)
     - Draggable window
-    - Tabs: Credits, Misc, Farm
+    - Credits, Misc, Farm tabs
     - Fly (with speed slider), Noclip, Infinite Jump, Walk Speed
     - AutoClick with delay slider
-    - All toggles turn green when active
 --]]
 
-local player = game:GetService("Players").LocalPlayer
+local player = game.Players.LocalPlayer
 local uis = game:GetService("UserInputService")
 local rs = game:GetService("RunService")
 
--- ------------------------------ GUI Creation ------------------------------
+-- Create GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "CobaltGUI"
 gui.ResetOnSpawn = false
@@ -40,7 +39,7 @@ local shadowCorner = Instance.new("UICorner")
 shadowCorner.CornerRadius = UDim.new(0, 12)
 shadowCorner.Parent = shadow
 
--- Title bar (draggable)
+-- Title Bar (draggable)
 local title = Instance.new("Frame")
 title.Size = UDim2.new(1, 0, 0, 40)
 title.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
@@ -77,7 +76,7 @@ local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 6)
 closeCorner.Parent = closeBtn
 
--- Tab bar
+-- Tab Bar
 local tabBar = Instance.new("Frame")
 tabBar.Size = UDim2.new(1, 0, 0, 40)
 tabBar.Position = UDim2.new(0, 0, 0, 40)
@@ -91,7 +90,7 @@ content.Position = UDim2.new(0, 0, 0, 80)
 content.BackgroundTransparency = 1
 content.Parent = main
 
--- ------------------------------ Credits Tab ------------------------------
+-- ==================== Credits Tab ====================
 local creditsTab = Instance.new("Frame")
 creditsTab.Size = UDim2.new(1, 0, 1, 0)
 creditsTab.BackgroundTransparency = 1
@@ -124,7 +123,7 @@ local redirCorner = Instance.new("UICorner")
 redirCorner.CornerRadius = UDim.new(0, 8)
 redirCorner.Parent = redirect
 
--- ------------------------------ Misc Tab ------------------------------
+-- ==================== Misc Tab ====================
 local miscTab = Instance.new("Frame")
 miscTab.Size = UDim2.new(1, 0, 1, 0)
 miscTab.BackgroundTransparency = 1
@@ -149,7 +148,7 @@ local rightCorner = Instance.new("UICorner")
 rightCorner.CornerRadius = UDim.new(0, 8)
 rightCorner.Parent = rightPanel
 
--- Fly speed slider
+-- Fly speed slider UI
 local flySpeedLabel = Instance.new("TextLabel")
 flySpeedLabel.Size = UDim2.new(1, 0, 0, 30)
 flySpeedLabel.Position = UDim2.new(0, 0, 0, 20)
@@ -190,7 +189,7 @@ local flyBtnCorner = Instance.new("UICorner")
 flyBtnCorner.CornerRadius = UDim.new(1, 0)
 flyBtnCorner.Parent = flySliderBtn
 
--- Misc toggle buttons
+-- Helper to create toggle buttons
 local function addButton(parent, name, y)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 45)
@@ -202,9 +201,9 @@ local function addButton(parent, name, y)
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
     btn.Parent = parent
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 8)
-    btnCorner.Parent = btn
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = btn
     return btn
 end
 
@@ -254,7 +253,7 @@ local speedBtnCorner = Instance.new("UICorner")
 speedBtnCorner.CornerRadius = UDim.new(1, 0)
 speedBtnCorner.Parent = speedSliderBtn
 
--- ------------------------------ Farm Tab ------------------------------
+-- ==================== Farm Tab ====================
 local farmTab = Instance.new("Frame")
 farmTab.Size = UDim2.new(1, 0, 1, 0)
 farmTab.BackgroundTransparency = 1
@@ -315,7 +314,7 @@ statusLabel.Font = Enum.Font.Gotham
 statusLabel.TextXAlignment = Enum.TextXAlignment.Left
 statusLabel.Parent = farmTab
 
--- ------------------------------ Tab Buttons ------------------------------
+-- ==================== Tab Buttons ====================
 local tabCredits = Instance.new("TextButton")
 tabCredits.Size = UDim2.new(0, 100, 1, 0)
 tabCredits.Position = UDim2.new(0, 10, 0, 0)
@@ -376,7 +375,7 @@ tabFarm.MouseButton1Click:Connect(function()
     tabMisc.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 end)
 
--- ------------------------------ Features ------------------------------
+-- ==================== Feature Variables ====================
 local char, hum, root
 local flyEnabled = false
 local noclipEnabled = false
@@ -394,7 +393,7 @@ local function getChar()
     if char and char.Parent then
         hum = char:FindFirstChild("Humanoid")
         root = char:FindFirstChild("HumanoidRootPart")
-        return true
+        return (hum and root)
     end
     return false
 end
@@ -417,12 +416,12 @@ local function startFly()
         end
         local move = hum.MoveDirection
         local cam = workspace.CurrentCamera
-        local f = cam.CFrame.LookVector
-        local r = cam.CFrame.RightVector
-        local u = cam.CFrame.UpVector
-        local vel = (f * move.Z + r * move.X) * flySpeed
-        if uis:IsKeyDown(Enum.KeyCode.Space) then vel = vel + u * flySpeed end
-        if uis:IsKeyDown(Enum.KeyCode.LeftControl) then vel = vel - u * flySpeed end
+        local forward = cam.CFrame.LookVector
+        local right = cam.CFrame.RightVector
+        local up = cam.CFrame.UpVector
+        local vel = (forward * move.Z + right * move.X) * flySpeed
+        if uis:IsKeyDown(Enum.KeyCode.Space) then vel = vel + up * flySpeed end
+        if uis:IsKeyDown(Enum.KeyCode.LeftControl) then vel = vel - up * flySpeed end
         bodyVel.Velocity = vel
     end)
 end
@@ -442,14 +441,18 @@ local function setFly(enabled)
         if getChar() then startFly()
         else player.CharacterAdded:Connect(function() if flyEnabled then getChar(); startFly() end end)
         end
-    else stopFly() end
+    else
+        stopFly()
+    end
 end
 
 -- Noclip
 local function updateNoclip()
     if not noclipEnabled or not getChar() then return end
     for _, part in ipairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then part.CanCollide = false end
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
     end
 end
 
@@ -457,7 +460,9 @@ local function startNoclip()
     if noclipConn then noclipConn:Disconnect() end
     updateNoclip()
     noclipConn = char.DescendantAdded:Connect(function(part)
-        if noclipEnabled and part:IsA("BasePart") then part.CanCollide = false end
+        if noclipEnabled and part:IsA("BasePart") then
+            part.CanCollide = false
+        end
     end)
 end
 
@@ -465,7 +470,9 @@ local function stopNoclip()
     if noclipConn then noclipConn:Disconnect(); noclipConn = nil end
     if getChar() then
         for _, part in ipairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then part.CanCollide = true end
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
         end
     end
 end
@@ -476,7 +483,9 @@ local function setNoclip(enabled)
         if getChar() then startNoclip()
         else player.CharacterAdded:Connect(function() if noclipEnabled then getChar(); startNoclip() end end)
         end
-    else stopNoclip() end
+    else
+        stopNoclip()
+    end
 end
 
 -- Infinite Jump
@@ -493,22 +502,22 @@ local function setInfJump(enabled)
 end
 
 -- Walk Speed
-local function setWalk(speed)
+local function setWalkSpeed(speed)
     walkSpeed = math.clamp(speed, 16, 250)
     if hum then hum.WalkSpeed = walkSpeed end
     speedLabel.Text = "Walk Speed: " .. math.floor(walkSpeed)
-    local p = (walkSpeed - 16) / (250 - 16)
-    speedFill.Size = UDim2.new(p, 0, 1, 0)
-    speedSliderBtn.Position = UDim2.new(p, -8, 0.5, -8)
+    local percent = (walkSpeed - 16) / (250 - 16)
+    speedFill.Size = UDim2.new(percent, 0, 1, 0)
+    speedSliderBtn.Position = UDim2.new(percent, -8, 0.5, -8)
 end
 
 -- Fly Speed
-local function setFlySpd(speed)
+local function setFlySpeed(speed)
     flySpeed = math.clamp(speed, 0, 200)
     flySpeedLabel.Text = "Fly Speed: " .. math.floor(flySpeed)
-    local p = flySpeed / 200
-    flyFill.Size = UDim2.new(p, 0, 1, 0)
-    flySliderBtn.Position = UDim2.new(p, -8, 0.5, -8)
+    local percent = flySpeed / 200
+    flyFill.Size = UDim2.new(percent, 0, 1, 0)
+    flySliderBtn.Position = UDim2.new(percent, -8, 0.5, -8)
 end
 
 -- AutoClick
@@ -520,7 +529,13 @@ local clickLoop = nil
 local function getRemote()
     if remoteEvent then return remoteEvent end
     local rep = game:GetService("ReplicatedStorage")
-    remoteEvent = rep:FindFirstChild("Remotes") and rep.Remotes:FindFirstChild("Events") and rep.Remotes.Events:FindFirstChild("ClickUI")
+    local remotes = rep:FindFirstChild("Remotes")
+    if remotes then
+        local events = remotes:FindFirstChild("Events")
+        if events then
+            remoteEvent = events:FindFirstChild("ClickUI")
+        end
+    end
     return remoteEvent
 end
 
@@ -558,87 +573,114 @@ end
 local function setClickDelay(delay)
     clickDelay = math.clamp(delay, 0.05, 1.0)
     delayLabel.Text = "Click Delay: " .. string.format("%.2f", clickDelay) .. " sec"
-    local p = (clickDelay - 0.05) / (1.0 - 0.05)
-    delayFill.Size = UDim2.new(p, 0, 1, 0)
-    delaySliderBtn.Position = UDim2.new(p, -8, 0.5, -8)
+    local percent = (clickDelay - 0.05) / (1.0 - 0.05)
+    delayFill.Size = UDim2.new(percent, 0, 1, 0)
+    delaySliderBtn.Position = UDim2.new(percent, -8, 0.5, -8)
     if autoClickEnabled then
         stopAutoClick()
         startAutoClick()
     end
 end
 
--- Slider dragging
-local function makeSlider(sliderFrame, fillFrame, dragBtn, onChange, minV, maxV)
+-- ==================== Slider Dragging (No GetMouse) ====================
+local function makeSlider(sliderFrame, fillFrame, dragBtn, onChange, minVal, maxVal)
+    local dragging = false
+    local dragStartX = 0
+    local dragStartPercent = 0
+
     dragBtn.MouseButton1Down:Connect(function()
+        dragging = true
         local mouse = player:GetMouse()
-        local moveConn, upConn
-        local function update()
-            local x = math.clamp((mouse.X - sliderFrame.AbsolutePosition.X) / sliderFrame.AbsoluteSize.X, 0, 1)
-            local val = minV + (maxV - minV) * x
-            onChange(val)
+        dragStartX = mouse.X
+        local currentPercent = (fillFrame.Size.X.Scale)
+        dragStartPercent = currentPercent
+    end)
+
+    uis.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local mouse = player:GetMouse()
+            local deltaX = mouse.X - dragStartX
+            local percentChange = deltaX / sliderFrame.AbsoluteSize.X
+            local newPercent = math.clamp(dragStartPercent + percentChange, 0, 1)
+            local newValue = minVal + (maxVal - minVal) * newPercent
+            onChange(newValue)
         end
-        moveConn = mouse.Move:Connect(update)
-        upConn = uis.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                moveConn:Disconnect()
-                upConn:Disconnect()
-            end
-        end)
-        update()
+    end)
+
+    uis.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
     end)
 end
 
-makeSlider(flySliderFrame, flyFill, flySliderBtn, setFlySpd, 0, 200)
-makeSlider(speedSliderFrame, speedFill, speedSliderBtn, setWalk, 16, 250)
+makeSlider(flySliderFrame, flyFill, flySliderBtn, setFlySpeed, 0, 200)
+makeSlider(speedSliderFrame, speedFill, speedSliderBtn, setWalkSpeed, 16, 250)
 makeSlider(delaySliderFrame, delayFill, delaySliderBtn, setClickDelay, 0.05, 1.0)
 
--- Toggle buttons
-local function toggle(btn, state, colorOn)
-    btn.BackgroundColor3 = state and colorOn or Color3.fromRGB(45, 45, 55)
+-- Toggle button visuals
+local function toggleButton(btn, state)
+    btn.BackgroundColor3 = state and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 55)
 end
 
 flyBtn.MouseButton1Click:Connect(function()
-    local new = not flyEnabled
-    setFly(new)
-    toggle(flyBtn, new, Color3.fromRGB(0, 150, 0))
-    rightPanel.Visible = new
+    local newState = not flyEnabled
+    setFly(newState)
+    toggleButton(flyBtn, newState)
+    rightPanel.Visible = newState
 end)
 
 noclipBtn.MouseButton1Click:Connect(function()
-    local new = not noclipEnabled
-    setNoclip(new)
-    toggle(noclipBtn, new, Color3.fromRGB(0, 150, 0))
+    local newState = not noclipEnabled
+    setNoclip(newState)
+    toggleButton(noclipBtn, newState)
 end)
 
 infJumpBtn.MouseButton1Click:Connect(function()
-    local new = not infJumpEnabled
-    setInfJump(new)
-    toggle(infJumpBtn, new, Color3.fromRGB(0, 150, 0))
+    local newState = not infJumpEnabled
+    setInfJump(newState)
+    toggleButton(infJumpBtn, newState)
 end)
 
 autoClickBtn.MouseButton1Click:Connect(function()
-    local new = not autoClickEnabled
-    setAutoClick(new)
-    toggle(autoClickBtn, new, Color3.fromRGB(0, 150, 0))
+    local newState = not autoClickEnabled
+    setAutoClick(newState)
+    toggleButton(autoClickBtn, newState)
 end)
 
 -- Redirect
 local function openUrl(url)
-    if syn and syn.request then syn.request({Url=url, Method="GET"})
-    elseif http and http.request then http.request(url)
-    elseif setclipboard then setclipboard(url)
-    end
+    pcall(function()
+        if syn and syn.request then
+            syn.request({ Url = url, Method = "GET" })
+        elseif http and http.request then
+            http.request(url)
+        elseif setclipboard then
+            setclipboard(url)
+        else
+            warn("Open URL manually: " .. url)
+        end
+    end)
 end
-redirect.MouseButton1Click:Connect(function() openUrl("https://guns.lol/erode") end)
+
+redirect.MouseButton1Click:Connect(function()
+    openUrl("https://guns.lol/erode")
+end)
 
 -- Character respawn handling
 player.CharacterAdded:Connect(function(newChar)
     char = newChar
     hum = char:WaitForChild("Humanoid")
     root = char:WaitForChild("HumanoidRootPart")
-    setWalk(walkSpeed)
-    if flyEnabled then stopFly(); startFly() end
-    if noclipEnabled then stopNoclip(); startNoclip() end
+    setWalkSpeed(walkSpeed)
+    if flyEnabled then
+        stopFly()
+        startFly()
+    end
+    if noclipEnabled then
+        stopNoclip()
+        startNoclip()
+    end
 end)
 
 -- Close and cleanup
@@ -653,29 +695,29 @@ closeBtn.MouseButton1Click:Connect(function()
     gui:Destroy()
 end)
 
--- Dragging functionality (FIXED)
-local dragging = false
+-- ==================== Draggable Window ====================
+local dragStart = nil
 local dragStartPos = nil
-local dragStartMouse = nil
+local draggingWindow = false
 
 title.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
+        draggingWindow = true
+        dragStart = input.Position
         dragStartPos = main.Position
-        dragStartMouse = input.Position
     end
 end)
 
 uis.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStartMouse
+    if draggingWindow and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
         main.Position = UDim2.new(dragStartPos.X.Scale, dragStartPos.X.Offset + delta.X, dragStartPos.Y.Scale, dragStartPos.Y.Offset + delta.Y)
     end
 end)
 
 uis.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
+        draggingWindow = false
     end
 end)
 
@@ -686,4 +728,4 @@ task.wait(0.05)
 main:TweenSize(UDim2.new(0, 600, 0, 450), "Out", "Back", 0.4, true)
 main:TweenPosition(UDim2.new(0.5, -300, 0.5, -225), "Out", "Quad", 0.4, true)
 
-print("Cobalt UI loaded - Draggable and fully functional")
+print("Cobalt UI loaded successfully - Fully functional and draggable")

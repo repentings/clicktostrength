@@ -1,0 +1,790 @@
+--[[
+    Cobalt UI - Executor Version (Krnl, Velocity, Synapse, ScriptWare)
+    Features:
+    - Tabs: Credits, Misc (fly/noclip/speed/infinite jump), Farm (autoclick)
+    - AutoClick toggle with delay slider (0.05 - 1 second)
+    - Fly toggle with speed slider (right panel appears when enabled)
+    - Buttons turn full green when active
+    - Gray/black modern theme, draggable, close button
+--]]
+
+local player = game:GetService("Players").LocalPlayer
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+
+-- ========================== UI Setup ==========================
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CobaltGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Main Frame (wider for three tabs)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Parent = screenGui
+mainFrame.Size = UDim2.new(0, 600, 0, 450)
+mainFrame.Position = UDim2.new(0.5, -300, 0.5, -225)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+mainFrame.BorderSizePixel = 0
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = mainFrame
+
+-- Shadow
+local shadowFrame = Instance.new("Frame")
+shadowFrame.Name = "Shadow"
+shadowFrame.Parent = mainFrame
+shadowFrame.Size = UDim2.new(1, 0, 1, 0)
+shadowFrame.Position = UDim2.new(0, 8, 0, 8)
+shadowFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+shadowFrame.BackgroundTransparency = 0.6
+shadowFrame.BorderSizePixel = 0
+shadowFrame.ZIndex = 0
+local shadowCorner = Instance.new("UICorner")
+shadowCorner.CornerRadius = UDim.new(0, 12)
+shadowCorner.Parent = shadowFrame
+shadowFrame:Lower()
+
+-- Title Bar
+local titleBar = Instance.new("Frame")
+titleBar.Name = "TitleBar"
+titleBar.Parent = mainFrame
+titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+titleBar.BorderSizePixel = 0
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = titleBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Parent = titleBar
+titleLabel.Size = UDim2.new(1, -40, 1, 0)
+titleLabel.Position = UDim2.new(0, 20, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "COBALT"
+titleLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+titleLabel.TextSize = 20
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+-- Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Parent = titleBar
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Position = UDim2.new(1, -35, 0, 5)
+closeButton.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+closeButton.BackgroundTransparency = 0.5
+closeButton.Text = "✕"
+closeButton.TextColor3 = Color3.fromRGB(200, 200, 210)
+closeButton.TextSize = 18
+closeButton.Font = Enum.Font.Gotham
+closeButton.BorderSizePixel = 0
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = closeButton
+
+-- Tab Bar
+local tabBar = Instance.new("Frame")
+tabBar.Name = "TabBar"
+tabBar.Parent = mainFrame
+tabBar.Size = UDim2.new(1, 0, 0, 40)
+tabBar.Position = UDim2.new(0, 0, 0, 40)
+tabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+tabBar.BorderSizePixel = 0
+
+-- Content Container
+local contentContainer = Instance.new("Frame")
+contentContainer.Name = "ContentContainer"
+contentContainer.Parent = mainFrame
+contentContainer.Size = UDim2.new(1, 0, 1, -80)
+contentContainer.Position = UDim2.new(0, 0, 0, 80)
+contentContainer.BackgroundTransparency = 1
+
+-- ===================== Credits Tab =====================
+local creditsFrame = Instance.new("Frame")
+creditsFrame.Name = "CreditsFrame"
+creditsFrame.Parent = contentContainer
+creditsFrame.Size = UDim2.new(1, 0, 1, 0)
+creditsFrame.BackgroundTransparency = 1
+creditsFrame.Visible = true
+
+local creditsLabel = Instance.new("TextLabel")
+creditsLabel.Parent = creditsFrame
+creditsLabel.Size = UDim2.new(1, 0, 0, 60)
+creditsLabel.Position = UDim2.new(0, 0, 0, 40)
+creditsLabel.BackgroundTransparency = 1
+creditsLabel.Text = "Created by poetry"
+creditsLabel.TextColor3 = Color3.fromRGB(160, 160, 170)
+creditsLabel.TextSize = 28
+creditsLabel.Font = Enum.Font.Gotham
+creditsLabel.TextXAlignment = Enum.TextXAlignment.Center
+creditsLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+local redirectButton = Instance.new("TextButton")
+redirectButton.Parent = creditsFrame
+redirectButton.Size = UDim2.new(0.5, 0, 0, 50)
+redirectButton.Position = UDim2.new(0.25, 0, 0, 140)
+redirectButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+redirectButton.Text = "Visit guns.lol/erode"
+redirectButton.TextColor3 = Color3.fromRGB(220, 220, 230)
+redirectButton.TextSize = 18
+redirectButton.Font = Enum.Font.GothamBold
+redirectButton.BorderSizePixel = 0
+local redirectCorner = Instance.new("UICorner")
+redirectCorner.CornerRadius = UDim.new(0, 8)
+redirectCorner.Parent = redirectButton
+
+-- ===================== Misc Tab =====================
+local miscFrame = Instance.new("Frame")
+miscFrame.Name = "MiscFrame"
+miscFrame.Parent = contentContainer
+miscFrame.Size = UDim2.new(1, 0, 1, 0)
+miscFrame.BackgroundTransparency = 1
+miscFrame.Visible = false
+
+-- Left Panel (toggle buttons)
+local leftPanel = Instance.new("Frame")
+leftPanel.Name = "LeftPanel"
+leftPanel.Parent = miscFrame
+leftPanel.Size = UDim2.new(0.5, -10, 1, -20)
+leftPanel.Position = UDim2.new(0, 10, 0, 10)
+leftPanel.BackgroundTransparency = 1
+
+-- Right Panel (fly speed slider)
+local rightPanel = Instance.new("Frame")
+rightPanel.Name = "RightPanel"
+rightPanel.Parent = miscFrame
+rightPanel.Size = UDim2.new(0.4, 0, 1, -20)
+rightPanel.Position = UDim2.new(0.55, 0, 0, 10)
+rightPanel.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+rightPanel.BackgroundTransparency = 0.8
+rightPanel.BorderSizePixel = 0
+rightPanel.Visible = false
+local rightCorner = Instance.new("UICorner")
+rightCorner.CornerRadius = UDim.new(0, 8)
+rightCorner.Parent = rightPanel
+
+-- Fly speed slider UI
+local flySpeedLabel = Instance.new("TextLabel")
+flySpeedLabel.Parent = rightPanel
+flySpeedLabel.Size = UDim2.new(1, 0, 0, 30)
+flySpeedLabel.Position = UDim2.new(0, 0, 0, 20)
+flySpeedLabel.BackgroundTransparency = 1
+flySpeedLabel.Text = "Fly Speed: 50"
+flySpeedLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+flySpeedLabel.TextSize = 16
+flySpeedLabel.Font = Enum.Font.Gotham
+
+local flySpeedSlider = Instance.new("Frame")
+flySpeedSlider.Parent = rightPanel
+flySpeedSlider.Size = UDim2.new(0.8, 0, 0, 6)
+flySpeedSlider.Position = UDim2.new(0.1, 0, 0, 60)
+flySpeedSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+flySpeedSlider.BorderSizePixel = 0
+local sliderCorner = Instance.new("UICorner")
+sliderCorner.CornerRadius = UDim.new(0, 3)
+sliderCorner.Parent = flySpeedSlider
+
+local sliderFill = Instance.new("Frame")
+sliderFill.Parent = flySpeedSlider
+sliderFill.Size = UDim2.new(0.25, 0, 1, 0)
+sliderFill.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+sliderFill.BorderSizePixel = 0
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(0, 3)
+fillCorner.Parent = sliderFill
+
+local sliderButton = Instance.new("TextButton")
+sliderButton.Parent = flySpeedSlider
+sliderButton.Size = UDim2.new(0, 16, 0, 16)
+sliderButton.Position = UDim2.new(0.25, -8, 0.5, -8)
+sliderButton.BackgroundColor3 = Color3.fromRGB(200, 200, 210)
+sliderButton.Text = ""
+sliderButton.BorderSizePixel = 0
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(1, 0)
+btnCorner.Parent = sliderButton
+
+-- Misc toggle buttons
+local function createToggleButton(parent, name, yPos, defaultColor, activeColor)
+    local btn = Instance.new("TextButton")
+    btn.Name = name .. "Btn"
+    btn.Parent = parent
+    btn.Size = UDim2.new(0.9, 0, 0, 45)
+    btn.Position = UDim2.new(0.05, 0, 0, yPos)
+    btn.BackgroundColor3 = defaultColor
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(220, 220, 230)
+    btn.TextSize = 18
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 8)
+    btnCorner.Parent = btn
+    return btn
+end
+
+local flyButton = createToggleButton(leftPanel, "Fly", 10, Color3.fromRGB(45, 45, 55), Color3.fromRGB(0, 150, 0))
+local noclipButton = createToggleButton(leftPanel, "Noclip", 70, Color3.fromRGB(45, 45, 55), Color3.fromRGB(0, 150, 0))
+local infiniteJumpButton = createToggleButton(leftPanel, "Infinite Jump", 130, Color3.fromRGB(45, 45, 55), Color3.fromRGB(0, 150, 0))
+
+-- Walk Speed slider
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Parent = leftPanel
+speedLabel.Size = UDim2.new(0.9, 0, 0, 30)
+speedLabel.Position = UDim2.new(0.05, 0, 0, 200)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "Walk Speed: 16"
+speedLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+speedLabel.TextSize = 16
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local speedSliderFrame = Instance.new("Frame")
+speedSliderFrame.Parent = leftPanel
+speedSliderFrame.Size = UDim2.new(0.8, 0, 0, 6)
+speedSliderFrame.Position = UDim2.new(0.1, 0, 0, 240)
+speedSliderFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+speedSliderFrame.BorderSizePixel = 0
+local speedSliderCorner = Instance.new("UICorner")
+speedSliderCorner.CornerRadius = UDim.new(0, 3)
+speedSliderCorner.Parent = speedSliderFrame
+
+local speedFill = Instance.new("Frame")
+speedFill.Parent = speedSliderFrame
+speedFill.Size = UDim2.new(0.16, 0, 1, 0)
+speedFill.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+speedFill.BorderSizePixel = 0
+local speedFillCorner = Instance.new("UICorner")
+speedFillCorner.CornerRadius = UDim.new(0, 3)
+speedFillCorner.Parent = speedFill
+
+local speedSliderButton = Instance.new("TextButton")
+speedSliderButton.Parent = speedSliderFrame
+speedSliderButton.Size = UDim2.new(0, 16, 0, 16)
+speedSliderButton.Position = UDim2.new(0.16, -8, 0.5, -8)
+speedSliderButton.BackgroundColor3 = Color3.fromRGB(200, 200, 210)
+speedSliderButton.Text = ""
+speedSliderButton.BorderSizePixel = 0
+local speedBtnCorner = Instance.new("UICorner")
+speedBtnCorner.CornerRadius = UDim.new(1, 0)
+speedBtnCorner.Parent = speedSliderButton
+
+-- ===================== Farm Tab =====================
+local farmFrame = Instance.new("Frame")
+farmFrame.Name = "FarmFrame"
+farmFrame.Parent = contentContainer
+farmFrame.Size = UDim2.new(1, 0, 1, 0)
+farmFrame.BackgroundTransparency = 1
+farmFrame.Visible = false
+
+-- AutoClick toggle button
+local autoClickButton = createToggleButton(farmFrame, "AutoClick", 10, Color3.fromRGB(45, 45, 55), Color3.fromRGB(0, 150, 0))
+
+-- Delay slider for AutoClick
+local delayLabel = Instance.new("TextLabel")
+delayLabel.Parent = farmFrame
+delayLabel.Size = UDim2.new(0.9, 0, 0, 30)
+delayLabel.Position = UDim2.new(0.05, 0, 0, 80)
+delayLabel.BackgroundTransparency = 1
+delayLabel.Text = "Click Delay: 0.10 sec"
+delayLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+delayLabel.TextSize = 16
+delayLabel.Font = Enum.Font.Gotham
+delayLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local delaySliderFrame = Instance.new("Frame")
+delaySliderFrame.Parent = farmFrame
+delaySliderFrame.Size = UDim2.new(0.8, 0, 0, 6)
+delaySliderFrame.Position = UDim2.new(0.1, 0, 0, 120)
+delaySliderFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+delaySliderFrame.BorderSizePixel = 0
+local delaySliderCorner = Instance.new("UICorner")
+delaySliderCorner.CornerRadius = UDim.new(0, 3)
+delaySliderCorner.Parent = delaySliderFrame
+
+local delayFill = Instance.new("Frame")
+delayFill.Parent = delaySliderFrame
+delayFill.Size = UDim2.new(0.1, 0, 1, 0) -- 0.1 sec out of max 1 sec = 10%
+delayFill.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+delayFill.BorderSizePixel = 0
+local delayFillCorner = Instance.new("UICorner")
+delayFillCorner.CornerRadius = UDim.new(0, 3)
+delayFillCorner.Parent = delayFill
+
+local delaySliderButton = Instance.new("TextButton")
+delaySliderButton.Parent = delaySliderFrame
+delaySliderButton.Size = UDim2.new(0, 16, 0, 16)
+delaySliderButton.Position = UDim2.new(0.1, -8, 0.5, -8)
+delaySliderButton.BackgroundColor3 = Color3.fromRGB(200, 200, 210)
+delaySliderButton.Text = ""
+delaySliderButton.BorderSizePixel = 0
+local delayBtnCorner = Instance.new("UICorner")
+delayBtnCorner.CornerRadius = UDim.new(1, 0)
+delayBtnCorner.Parent = delaySliderButton
+
+-- Status label (optional)
+local autoClickStatus = Instance.new("TextLabel")
+autoClickStatus.Parent = farmFrame
+autoClickStatus.Size = UDim2.new(0.9, 0, 0, 30)
+autoClickStatus.Position = UDim2.new(0.05, 0, 0, 160)
+autoClickStatus.BackgroundTransparency = 1
+autoClickStatus.Text = "AutoClick: OFF"
+autoClickStatus.TextColor3 = Color3.fromRGB(180, 180, 190)
+autoClickStatus.TextSize = 14
+autoClickStatus.Font = Enum.Font.Gotham
+autoClickStatus.TextXAlignment = Enum.TextXAlignment.Left
+
+-- ===================== Tab Buttons =====================
+local creditsTabBtn = Instance.new("TextButton")
+creditsTabBtn.Parent = tabBar
+creditsTabBtn.Size = UDim2.new(0, 100, 1, 0)
+creditsTabBtn.Position = UDim2.new(0, 10, 0, 0)
+creditsTabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+creditsTabBtn.Text = "Credits"
+creditsTabBtn.TextColor3 = Color3.fromRGB(220, 220, 230)
+creditsTabBtn.Font = Enum.Font.GothamBold
+creditsTabBtn.TextSize = 16
+creditsTabBtn.BorderSizePixel = 0
+
+local miscTabBtn = Instance.new("TextButton")
+miscTabBtn.Parent = tabBar
+miscTabBtn.Size = UDim2.new(0, 100, 1, 0)
+miscTabBtn.Position = UDim2.new(0, 120, 0, 0)
+miscTabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+miscTabBtn.Text = "Misc"
+miscTabBtn.TextColor3 = Color3.fromRGB(220, 220, 230)
+miscTabBtn.Font = Enum.Font.GothamBold
+miscTabBtn.TextSize = 16
+miscTabBtn.BorderSizePixel = 0
+
+local farmTabBtn = Instance.new("TextButton")
+farmTabBtn.Parent = tabBar
+farmTabBtn.Size = UDim2.new(0, 100, 1, 0)
+farmTabBtn.Position = UDim2.new(0, 230, 0, 0)
+farmTabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+farmTabBtn.Text = "Farm"
+farmTabBtn.TextColor3 = Color3.fromRGB(220, 220, 230)
+farmTabBtn.Font = Enum.Font.GothamBold
+farmTabBtn.TextSize = 16
+farmTabBtn.BorderSizePixel = 0
+
+creditsTabBtn.MouseButton1Click:Connect(function()
+    creditsFrame.Visible = true
+    miscFrame.Visible = false
+    farmFrame.Visible = false
+    creditsTabBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 65)
+    miscTabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    farmTabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+end)
+
+miscTabBtn.MouseButton1Click:Connect(function()
+    creditsFrame.Visible = false
+    miscFrame.Visible = true
+    farmFrame.Visible = false
+    miscTabBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 65)
+    creditsTabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    farmTabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+end)
+
+farmTabBtn.MouseButton1Click:Connect(function()
+    creditsFrame.Visible = false
+    miscFrame.Visible = false
+    farmFrame.Visible = true
+    farmTabBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 65)
+    creditsTabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    miscTabBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+end)
+
+-- Initialize credits tab as selected
+creditsTabBtn.BackgroundColor3 = Color3.fromRGB(55, 55, 65)
+
+-- ===================== Feature Variables =====================
+local flyEnabled = false
+local noclipEnabled = false
+local infiniteJumpEnabled = false
+local currentFlySpeed = 50
+local currentWalkSpeed = 16
+
+-- AutoClick variables
+local autoClickEnabled = false
+local autoClickDelay = 0.1
+local autoClickLoop = nil
+local remoteEvent = nil
+
+-- Get remote event
+local function getRemoteEvent()
+    if remoteEvent then return remoteEvent end
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    remoteEvent = replicatedStorage:FindFirstChild("Remotes") and replicatedStorage.Remotes:FindFirstChild("Events") and replicatedStorage.Remotes.Events:FindFirstChild("ClickUI")
+    return remoteEvent
+end
+
+-- AutoClick loop
+local function startAutoClick()
+    if autoClickLoop then return end
+    autoClickLoop = task.spawn(function()
+        while autoClickEnabled do
+            local event = getRemoteEvent()
+            if event then
+                -- Use FireServer (standard Roblox remote event)
+                -- If the remote expects a client event, you may need to use FireClient, but given the provided code, we assume server.
+                pcall(function()
+                    event:FireServer(1, false)
+                end)
+            else
+                -- If remote not found, wait and retry
+                task.wait(1)
+            end
+            task.wait(autoClickDelay)
+        end
+        autoClickLoop = nil
+    end)
+end
+
+local function stopAutoClick()
+    if autoClickLoop then
+        task.cancel(autoClickLoop)
+        autoClickLoop = nil
+    end
+end
+
+local function setAutoClickEnabled(enable)
+    autoClickEnabled = enable
+    if autoClickEnabled then
+        startAutoClick()
+        autoClickStatus.Text = "AutoClick: ON (clicking every " .. string.format("%.2f", autoClickDelay) .. "s)"
+        autoClickStatus.TextColor3 = Color3.fromRGB(0, 200, 0)
+    else
+        stopAutoClick()
+        autoClickStatus.Text = "AutoClick: OFF"
+        autoClickStatus.TextColor3 = Color3.fromRGB(180, 180, 190)
+    end
+end
+
+local function setAutoClickDelay(delay)
+    autoClickDelay = math.clamp(delay, 0.05, 1.0)
+    delayLabel.Text = "Click Delay: " .. string.format("%.2f", autoClickDelay) .. " sec"
+    local percent = (autoClickDelay - 0.05) / (1.0 - 0.05)
+    delayFill.Size = UDim2.new(percent, 0, 1, 0)
+    delaySliderButton.Position = UDim2.new(percent, -8, 0.5, -8)
+    if autoClickEnabled then
+        -- Restart loop with new delay
+        stopAutoClick()
+        startAutoClick()
+    end
+end
+
+-- ===================== Other Features (Fly, Noclip, etc.) =====================
+local character = nil
+local humanoid = nil
+local rootPart = nil
+
+local function getCharacter()
+    character = player.Character
+    if character and character.Parent then
+        humanoid = character:FindFirstChild("Humanoid")
+        rootPart = character:FindFirstChild("HumanoidRootPart")
+        return true
+    end
+    return false
+end
+
+-- Fly implementation
+local flyConnection = nil
+local bodyVelocity = nil
+
+local function startFly()
+    if not getCharacter() then return end
+    if flyConnection then flyConnection:Disconnect() end
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+    humanoid.PlatformStand = true
+    bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+    bodyVelocity.Velocity = Vector3.new()
+    bodyVelocity.Parent = rootPart
+    flyConnection = runService.Heartbeat:Connect(function(dt)
+        if not flyEnabled or not character or character.Parent == nil then
+            if bodyVelocity then bodyVelocity:Destroy() end
+            if flyConnection then flyConnection:Disconnect() end
+            flyConnection = nil
+            return
+        end
+        local moveDirection = humanoid.MoveDirection
+        local camera = workspace.CurrentCamera
+        local forward = camera.CFrame.LookVector
+        local right = camera.CFrame.RightVector
+        local up = camera.CFrame.UpVector
+        local velocity = (forward * moveDirection.Z + right * moveDirection.X) * currentFlySpeed
+        if userInputService:IsKeyDown(Enum.KeyCode.Space) then
+            velocity = velocity + up * currentFlySpeed
+        end
+        if userInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+            velocity = velocity - up * currentFlySpeed
+        end
+        bodyVelocity.Velocity = velocity
+    end)
+end
+
+local function stopFly()
+    if flyConnection then flyConnection:Disconnect(); flyConnection = nil end
+    if bodyVelocity then bodyVelocity:Destroy(); bodyVelocity = nil end
+    if humanoid then
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+        humanoid.PlatformStand = false
+    end
+end
+
+local function setFlyEnabled(enable)
+    flyEnabled = enable
+    if flyEnabled then
+        if getCharacter() then
+            startFly()
+        else
+            player.CharacterAdded:Connect(function(newChar)
+                if flyEnabled then
+                    getCharacter()
+                    startFly()
+                end
+            end)
+        end
+    else
+        stopFly()
+    end
+end
+
+-- Noclip
+local noclipConnection = nil
+local function updateNoclip()
+    if not noclipEnabled then return end
+    if not getCharacter() then return end
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+
+local function startNoclip()
+    if noclipConnection then noclipConnection:Disconnect() end
+    updateNoclip()
+    noclipConnection = character.DescendantAdded:Connect(function(part)
+        if noclipEnabled and part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end)
+end
+
+local function stopNoclip()
+    if noclipConnection then noclipConnection:Disconnect(); noclipConnection = nil end
+    if getCharacter() then
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+    end
+end
+
+local function setNoclipEnabled(enable)
+    noclipEnabled = enable
+    if noclipEnabled then
+        if getCharacter() then
+            startNoclip()
+        else
+            player.CharacterAdded:Connect(function(newChar)
+                if noclipEnabled then
+                    getCharacter()
+                    startNoclip()
+                end
+            end)
+        end
+    else
+        stopNoclip()
+    end
+end
+
+-- Infinite Jump
+local infiniteJumpConnection = nil
+local function setInfiniteJumpEnabled(enable)
+    infiniteJumpEnabled = enable
+    if infiniteJumpEnabled then
+        if infiniteJumpConnection then infiniteJumpConnection:Disconnect() end
+        infiniteJumpConnection = userInputService.JumpRequest:Connect(function()
+            if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Jumping then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    else
+        if infiniteJumpConnection then infiniteJumpConnection:Disconnect(); infiniteJumpConnection = nil end
+    end
+end
+
+-- Walk Speed
+local function setWalkSpeed(speed)
+    currentWalkSpeed = math.clamp(speed, 16, 250)
+    if humanoid then
+        humanoid.WalkSpeed = currentWalkSpeed
+    end
+    speedLabel.Text = "Walk Speed: " .. math.floor(currentWalkSpeed)
+    local percent = (currentWalkSpeed - 16) / (250 - 16)
+    speedFill.Size = UDim2.new(percent, 0, 1, 0)
+    speedSliderButton.Position = UDim2.new(percent, -8, 0.5, -8)
+end
+
+-- Fly Speed
+local function setFlySpeed(speed)
+    currentFlySpeed = math.clamp(speed, 0, 200)
+    flySpeedLabel.Text = "Fly Speed: " .. math.floor(currentFlySpeed)
+    local percent = currentFlySpeed / 200
+    sliderFill.Size = UDim2.new(percent, 0, 1, 0)
+    sliderButton.Position = UDim2.new(percent, -8, 0.5, -8)
+end
+
+-- ===================== Slider Dragging Logic =====================
+local function makeDraggableSlider(sliderFrame, fillFrame, dragButton, onChange, minVal, maxVal, initialVal)
+    local dragging = false
+    dragButton.MouseButton1Down:Connect(function()
+        dragging = true
+        local mouse = player:GetMouse()
+        local function update()
+            local relativeX = math.clamp((mouse.X - sliderFrame.AbsolutePosition.X) / sliderFrame.AbsoluteSize.X, 0, 1)
+            local value = minVal + (maxVal - minVal) * relativeX
+            onChange(value)
+        end
+        local conn
+        conn = mouse.Move:Connect(update)
+        local relConn
+        relConn = userInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+                conn:Disconnect()
+                relConn:Disconnect()
+            end
+        end)
+        update()
+    end)
+end
+
+makeDraggableSlider(flySpeedSlider, sliderFill, sliderButton, setFlySpeed, 0, 200, currentFlySpeed)
+makeDraggableSlider(speedSliderFrame, speedFill, speedSliderButton, setWalkSpeed, 16, 250, currentWalkSpeed)
+makeDraggableSlider(delaySliderFrame, delayFill, delaySliderButton, setAutoClickDelay, 0.05, 1.0, autoClickDelay)
+
+-- ===================== Toggle Button Connections =====================
+flyButton.MouseButton1Click:Connect(function()
+    local newState = not flyEnabled
+    setFlyEnabled(newState)
+    flyButton.BackgroundColor3 = newState and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 55)
+    rightPanel.Visible = newState
+end)
+
+noclipButton.MouseButton1Click:Connect(function()
+    local newState = not noclipEnabled
+    setNoclipEnabled(newState)
+    noclipButton.BackgroundColor3 = newState and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 55)
+end)
+
+infiniteJumpButton.MouseButton1Click:Connect(function()
+    local newState = not infiniteJumpEnabled
+    setInfiniteJumpEnabled(newState)
+    infiniteJumpButton.BackgroundColor3 = newState and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 55)
+end)
+
+autoClickButton.MouseButton1Click:Connect(function()
+    local newState = not autoClickEnabled
+    setAutoClickEnabled(newState)
+    autoClickButton.BackgroundColor3 = newState and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 55)
+end)
+
+-- ===================== Character Change Handling =====================
+player.CharacterAdded:Connect(function(newChar)
+    character = newChar
+    humanoid = character:WaitForChild("Humanoid")
+    rootPart = character:WaitForChild("HumanoidRootPart")
+    setWalkSpeed(currentWalkSpeed)
+    if flyEnabled then
+        stopFly()
+        startFly()
+    end
+    if noclipEnabled then
+        stopNoclip()
+        startNoclip()
+    end
+    if infiniteJumpEnabled then
+        setInfiniteJumpEnabled(true)
+    end
+end)
+
+-- ===================== Redirect Button =====================
+local function openURL(url)
+    local success = false
+    if syn and syn.request then
+        syn.request({ Url = url, Method = "GET" })
+        success = true
+    elseif http and http.request then
+        http.request(url)
+        success = true
+    elseif setclipboard then
+        setclipboard(url)
+        success = true
+    end
+    if not success then
+        warn("Open this link: " .. url)
+    end
+end
+
+redirectButton.MouseButton1Click:Connect(function()
+    openURL("https://guns.lol/erode")
+end)
+
+-- ===================== Close & Cleanup =====================
+closeButton.MouseButton1Click:Connect(function()
+    setFlyEnabled(false)
+    setNoclipEnabled(false)
+    setInfiniteJumpEnabled(false)
+    setAutoClickEnabled(false)
+    if humanoid then humanoid.WalkSpeed = 16 end
+    mainFrame:TweenSize(UDim2.new(0, 0, 0, 0), "In", "Quad", 0.3, true)
+    task.wait(0.3)
+    screenGui:Destroy()
+end)
+
+-- ===================== Draggable Window =====================
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+
+userInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+userInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- ===================== Entrance Animation =====================
+mainFrame.Size = UDim2.new(0, 0, 0, 0)
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+task.wait(0.05)
+mainFrame:TweenSize(UDim2.new(0, 600, 0, 450), "Out", "Back", 0.4, true)
+mainFrame:TweenPosition(UDim2.new(0.5, -300, 0.5, -225), "Out", "Quad", 0.4, true)
+
+print("Cobalt UI with Farm tab (AutoClick) loaded - Created by poetry")
